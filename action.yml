@@ -1,0 +1,61 @@
+name: Fast Forward Merge
+author: oneee
+description: Fast forawrd merge method for GitHub.
+
+branding:
+  icon: git-merge
+  color: purple
+
+inputs:
+  merge:
+    default: "false"
+    description: >
+      Wheter to merge the branch immediately.
+
+      If set to false, it will only check if two branches are
+      possible to fast forward. If set to true, it will fast forward
+      the base branch to target branch.
+
+      choices: ["true", "false"]
+
+  comment:
+    default: "always"
+    description: >
+      Determines if it should leave a comment.
+
+      never: Never comment.
+      failure: Only comment on failures like no permission, cannot fast forward.
+      always: Always comment, including success message.
+
+      choices: ["never", "failure", "always"]
+
+  allowed_roles:
+    required: true
+    description: >
+      Checks if triggering_actor has one of the roles.
+
+      If it doesn't have a role matching the criteria, workflow will abort and
+      comment that the user doesn't have enough permission.
+      It must be a type of list of strings. (dqoute is necessary) (e.g. ["read", "write"])
+      If empty, anyone can run this workflow.
+
+      Note that triggering_actor must be one of organization members, or outside collaborators, or teams.
+      If not, it should be treated as it doesn't have permission.
+
+      choices: ["read", "triage", "write", "maintain", "admin", custom_role]
+
+      See: [Repository roles for organizations](https://docs.github.com/en/organizations/managing-user-access-to-your-organizations-repositories/managing-repository-roles/repository-roles-for-an-organization#repository-roles-for-organizations)
+
+  GITHUB_TOKEN:
+    default: "${{ github.token }}"
+    description: >
+      Automatically provided token.
+
+      Default token won't let this workflow to trigger other workflows. (e.g. push event)
+      If needed, replace this value with your PAT(Personal Acess Token).
+
+      See: [Triggering a workflow from a workflow](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/triggering-a-workflow#triggering-a-workflow-from-a-workflow)
+
+runs:
+  using: docker
+  image: docker://ghcr.io/onee-only/ff-merge:latest
