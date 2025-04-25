@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -95,13 +96,17 @@ func readConf(actions *githubactions.Action) (conf types.Config, err error) {
 	conf.PR.Repository = context.Repository
 	conf.TriggeringActor = context.TriggeringActor
 
+	conf.PR.PRNum, err = processEvent(context.Event)
+	if err != nil {
+		return types.Config{}, errors.Wrap(err, "processing event")
+	}
+
 	conf.AuthToken = actions.GetInput("GITHUB_TOKEN")
 
-	level, err := types.CommentLevelFromStr(actions.GetInput("comment"))
+	conf.CommentLevel, err = types.CommentLevelFromStr(actions.GetInput("comment"))
 	if err != nil {
 		return types.Config{}, errors.Wrap(err, "failed to get a value of comment")
 	}
-	conf.CommentLevel = level
 
 	mergeStr := actions.GetInput("merge")
 	switch mergeStr {
@@ -113,5 +118,40 @@ func readConf(actions *githubactions.Action) (conf types.Config, err error) {
 		return types.Config{}, errors.New(`merge must be "true" or "false"`)
 	}
 
+	allowedRolesBytes := []byte(actions.GetInput("allowed-roles"))
+	if err := json.Unmarshal(allowedRolesBytes, &conf.AllowedRoles); err != nil {
+		return types.Config{}, errors.Wrap(err, "failed to parse allowed-roles")
+	}
+
 	return conf, nil
+}
+
+func processEvent(event map[string]any) (prNum int, err error) {
+	// Get PR number from issue.
+	if issue, ok := event["issue"].(map[string]any); ok {
+		if pr, ok := issue["pull_request"].(map[string]any); !ok || len(pr) == 0 {
+			// The pull_request field could be {}.
+			// Which means that it will be unmarshaled into empty map.
+			return 0, errors.New("event is not from pull request")
+		}
+
+		num, ok := issue["number"].(int)
+		if !ok {
+			return 0, errors.New("event.issue.number is invalid")
+		}
+
+		return num, nil
+	}
+
+	// Get PR number from pull_request.
+	if pull_request, ok := event["pull_request"].(map[string]any); ok {
+		num, ok := pull_request["number"].(int)
+		if !ok {
+			return 0, errors.New("event.pull_request.number is invalid")
+		}
+
+		return num, nil
+	}
+
+	return 0, errors.New("event doesn't contain neither issue nor pull_request")
 }

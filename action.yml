@@ -29,7 +29,7 @@ inputs:
 
       choices: ["never", "failure", "always"]
 
-  allowed_roles:
+  allowed-roles:
     required: true
     description: >
       Checks if triggering_actor has one of the roles.
