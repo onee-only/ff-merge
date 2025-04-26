@@ -30,7 +30,7 @@ inputs:
       choices: ["never", "failure", "always"]
 
   allowed-roles:
-    required: true
+    default: "[]"
     description: >
       Checks if triggering_actor has one of the roles.
 
@@ -49,7 +49,7 @@ inputs:
   GITHUB_TOKEN:
     default: "${{ github.token }}"
     description: >
-      Automatically provided token.
+      Token used to authenticate.
 
       Default token won't let this workflow to trigger other workflows. (e.g. push event)
       If needed, replace this value with your PAT(Personal Acess Token).
