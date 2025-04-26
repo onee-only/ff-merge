@@ -58,4 +58,4 @@ inputs:
 
 runs:
   using: docker
-  image: docker://ghcr.io/onee-only/ff-merge:0.1.0
+  image: docker://ghcr.io/onee-only/ff-merge:1.0.1
