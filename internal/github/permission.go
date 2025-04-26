@@ -27,7 +27,7 @@ func CheckPermission(
 		ctx, pr.Owner, pr.Repository, user,
 	)
 	if res.StatusCode == http.StatusNotFound {
-		return errors.Wrap(err, "user is not a collaborator of this repository")
+		return errors.Wrap(ErrUserNotAllowed, "user is not a collaborator of this repository")
 	}
 	if err != nil {
 		return errors.Wrap(err, "getting permission level")

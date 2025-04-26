@@ -38,7 +38,7 @@ func run(ctx context.Context, actions *githubactions.Action) error {
 	if err != nil {
 		if errors.Is(err, github.ErrUserNotAllowed) && conf.CommentLevel.AtLeast(types.Failure) {
 			message := fmt.Sprintf(
-				"@%s doesn't have enough permission to trigger fast-forward",
+				"@%s doesn't have enough permission to trigger fast-forward.",
 				conf.TriggeringActor,
 			)
 
@@ -92,13 +92,12 @@ func readConf(actions *githubactions.Action) (conf types.Config, err error) {
 		return types.Config{}, errors.Wrap(err, "reading action context")
 	}
 
-	conf.PR.Owner = context.RepositoryOwner
-	conf.PR.Repository = context.Repository
+	conf.PR.Owner, conf.PR.Repository = context.Repo()
 	conf.TriggeringActor = context.TriggeringActor
 
 	conf.PR.PRNum, err = processEvent(context.Event)
 	if err != nil {
-		return types.Config{}, errors.Wrap(err, "processing event")
+		return types.Config{}, errors.Wrapf(err, "processing event")
 	}
 
 	conf.AuthToken = actions.GetInput("GITHUB_TOKEN")
@@ -135,22 +134,22 @@ func processEvent(event map[string]any) (prNum int, err error) {
 			return 0, errors.New("event is not from pull request")
 		}
 
-		num, ok := issue["number"].(int)
+		num, ok := issue["number"].(float64)
 		if !ok {
 			return 0, errors.New("event.issue.number is invalid")
 		}
 
-		return num, nil
+		return int(num), nil
 	}
 
 	// Get PR number from pull_request.
 	if pull_request, ok := event["pull_request"].(map[string]any); ok {
-		num, ok := pull_request["number"].(int)
+		num, ok := pull_request["number"].(float64)
 		if !ok {
 			return 0, errors.New("event.pull_request.number is invalid")
 		}
 
-		return num, nil
+		return int(num), nil
 	}
 
 	return 0, errors.New("event doesn't contain neither issue nor pull_request")

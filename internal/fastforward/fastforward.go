@@ -3,7 +3,6 @@ package fastforward
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -20,10 +19,6 @@ func Do(
 	info types.PRInfo,
 	push bool,
 ) (success bool, err error) {
-	if err := os.Mkdir("/tmp", 0755); err != nil {
-		return false, errors.Wrap(err, "creating /tmp")
-	}
-
 	auth := &http.BasicAuth{
 		Username: "ff-merge", // Doc says it can be anything but empty.
 		Password: authToken,
@@ -31,7 +26,7 @@ func Do(
 
 	baseBranchRef := plumbing.NewBranchReferenceName(info.BaseBranch)
 
-	r, err := git.PlainCloneContext(ctx, "/tmp", true, &git.CloneOptions{
+	r, err := git.PlainCloneContext(ctx, "/tmp/ff-merge", true, &git.CloneOptions{
 		URL: fmt.Sprintf("https://github.com/%s/%s", prID.Owner, prID.Repository),
 
 		Auth:              auth,
@@ -60,7 +55,7 @@ func Do(
 	err = r.PushContext(ctx, &git.PushOptions{
 		RefSpecs: []config.RefSpec{
 			// Push head to intended branch.
-			config.RefSpec(fmt.Sprintf("HEAD:%s", baseBranchRef)),
+			config.RefSpec(fmt.Sprintf("%s:%s", baseBranchRef, baseBranchRef)),
 		},
 		Auth: auth,
 	})

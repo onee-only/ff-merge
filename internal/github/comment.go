@@ -14,9 +14,9 @@ func Comment(
 	prID types.PRIdentifier,
 	message string,
 ) error {
-	comment := &gh.PullRequestComment{Body: &message}
+	comment := &gh.IssueComment{Body: &message}
 
-	_, _, err := client.PullRequests.CreateComment(
+	_, _, err := client.Issues.CreateComment(
 		ctx,
 		prID.Owner, prID.Repository, prID.PRNum,
 		comment,
